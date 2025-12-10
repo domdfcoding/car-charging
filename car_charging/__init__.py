@@ -37,7 +37,7 @@ import datetime
 from typing import List, Tuple
 
 # 3rd party
-import scipy.ndimage  # type: ignore[import]
+import scipy.ndimage  # type: ignore[import-untyped]
 
 # this package
 from car_charging.consumption import Consumption
