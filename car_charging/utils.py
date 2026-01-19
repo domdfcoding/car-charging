@@ -39,6 +39,8 @@ __all__ = ["compensate_bst", "configure_locale"]
 def compensate_bst(date: datetime.datetime) -> datetime.datetime:
 	"""
 	Apply a one hour offset to the time if it falls within British Summer Time.
+
+	:param date:
 	"""
 
 	if is_bst(date.timetuple()):

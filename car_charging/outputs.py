@@ -85,7 +85,7 @@ def console(charging_periods: List[Tuple[float, datetime.datetime, datetime.date
 					f"{total:0.3f}",
 					"kWh",
 					price_formatted,
-					f"{start:%a %d %B %Y %X} - {end:%a %d %B %Y %X} ({end-start})"
+					f"{start:%a %d %B %Y %X} - {end:%a %d %B %Y %X} ({end-start})",
 					)
 
 
@@ -97,11 +97,15 @@ class _ChargingPeriod(TypedDict):
 	duration: str
 
 
-def json(charging_periods: List[Tuple[float, datetime.datetime, datetime.datetime, float]], **kwargs) -> str:
-	"""
+def json(
+		charging_periods: List[Tuple[float, datetime.datetime, datetime.datetime, float]],
+		**kwargs,
+		) -> str:
+	r"""
 	Format the charging periods as JSON.
 
 	:param charging_periods:
+	:param \*\*kwargs: Additional keyword arguments passed to :func:`json.dumps`.
 	"""
 
 	prepared_charging_periods: List[_ChargingPeriod] = []

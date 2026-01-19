@@ -63,7 +63,9 @@ def update_consumption_data(config: Config) -> List[consumption.Consumption]:
 		# latest_period = datetime.datetime(year=2023, month=8, day=14)
 
 	with InfluxDBClient(
-			url=influxdb_config["host"], token=influxdb_config["token"], org=influxdb_config["org"]
+			url=influxdb_config["host"],
+			token=influxdb_config["token"],
+			org=influxdb_config["org"],
 			) as client:
 
 		query = f"""

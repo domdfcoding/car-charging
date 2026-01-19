@@ -79,6 +79,8 @@ class Config:
 	def load(cls, filename: PathPlus) -> "Config":
 		"""
 		Load a :class:`~.Config` from a TOML file.
+
+		:param filename:
 		"""
 
 		config = tomli.loads(filename.read_text())
