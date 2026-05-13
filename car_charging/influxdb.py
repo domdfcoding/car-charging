@@ -31,15 +31,25 @@ import datetime
 from typing import List
 
 # 3rd party
-from influxdb_client import InfluxDBClient
+from influxdb_client import InfluxDBClient  # type: ignore[import]
 
 # this package
 from car_charging import consumption
-from car_charging.config import Config
+from car_charging.config import Config, InfluxDBConfig
 
-__all__ = ["update_consumption_data"]
+__all__ = ["update_consumption_csv", "update_consumption_data"]
 
 tele_period = datetime.timedelta(seconds=20)
+
+
+def _make_query(start_date: datetime.datetime, influxdb_config: InfluxDBConfig):
+	return f"""
+	from(bucket: "telegraf")
+	|> range(start: {start_date.isoformat()}, stop: {(datetime.datetime.now()-datetime.timedelta(hours=1)).isoformat().split('.')[0]}Z)
+	|> filter(fn: (r) => r["topic"] == "{influxdb_config["topic"]}")
+	|> filter(fn: (r) => r["_field"] == "{influxdb_config["field"]}")
+	|> aggregateWindow(every: 20s, fn: sum, createEmpty: false)
+	"""
 
 
 def update_consumption_data(config: Config) -> List[consumption.Consumption]:
@@ -68,13 +78,7 @@ def update_consumption_data(config: Config) -> List[consumption.Consumption]:
 			org=influxdb_config["org"],
 			) as client:
 
-		query = f"""
-	from(bucket: "telegraf")
-	|> range(start: {latest_period.isoformat()}, stop: {(datetime.datetime.now()-datetime.timedelta(hours=1)).isoformat().split('.')[0]}Z)
-	|> filter(fn: (r) => r["topic"] == "{influxdb_config["topic"]}")
-	|> filter(fn: (r) => r["_field"] == "{influxdb_config["field"]}")
-	|> aggregateWindow(every: 20s, fn: sum, createEmpty: false)
-	"""
+		query = _make_query(latest_period, influxdb_config)
 
 		# print(query)
 
@@ -91,3 +95,33 @@ def update_consumption_data(config: Config) -> List[consumption.Consumption]:
 		consumption.to_json(consumption_data, json_datafile)
 
 	return consumption_data
+
+
+def update_consumption_csv(config: Config) -> List[str]:
+	"""
+	Update the cached consumption data from InfluxDB.
+
+	:param config:
+	"""
+
+	influxdb_config = config.influxdb
+	json_datafile = config.datafile
+
+	latest_period = datetime.datetime(year=2022, month=9, day=18, tzinfo=datetime.timezone.utc)
+
+	with InfluxDBClient(
+			url=influxdb_config["host"],
+			token=influxdb_config["token"],
+			org=influxdb_config["org"],
+			) as client:
+
+		query = _make_query(latest_period, influxdb_config)
+
+		response = client.query_api().query_raw(query)
+
+	csv_data = response.data.decode("UTF-8")
+	json_datafile.write_text(csv_data)  # Actually CSV not JSON
+
+	csv_lines = [l for l in csv_data.splitlines() if not l.startswith('#')]
+
+	return csv_lines
