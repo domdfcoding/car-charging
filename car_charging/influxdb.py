@@ -31,7 +31,7 @@ import datetime
 from typing import List
 
 # 3rd party
-from influxdb_client import InfluxDBClient  # type: ignore[import]
+from influxdb_client import InfluxDBClient
 
 # this package
 from car_charging import consumption
@@ -42,7 +42,7 @@ __all__ = ["update_consumption_csv", "update_consumption_data"]
 tele_period = datetime.timedelta(seconds=20)
 
 
-def _make_query(start_date: datetime.datetime, influxdb_config: InfluxDBConfig):
+def _make_query(start_date: datetime.datetime, influxdb_config: InfluxDBConfig) -> str:
 	return f"""
 	from(bucket: "telegraf")
 	|> range(start: {start_date.isoformat()}, stop: {(datetime.datetime.now()-datetime.timedelta(hours=1)).isoformat().split('.')[0]}Z)
